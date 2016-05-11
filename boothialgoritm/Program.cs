@@ -1,39 +1,42 @@
 ﻿using System;
-//using System.Collections.Generic;
 using System.Collections;
-using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
 
 namespace boothialgoritm
 {
     class Program
-    {                   //teha bitarray peale ymber
-        BitArray muutuja1;          
-        BitArray muutuja2;          
-        BitArray muutuja3;
-        BitArray muutuja4;
-
-        int[] bits1;                //reg1
-        int[] bits2;                //reg2
-        int[] bits3;                //reg4
-        int[] bits2neg;             //reg5
-
-         //reg1-3 saavad automaatselt 8biti pikkuseks, kuna andes neile v22rtusi kasutan baidi pikkust, mis on 8...
-
-        int[] bits4;                //reg3 - pikkusega 17bitti.
+    {
+        BitArray muutuja1;          //1operand              8bitti
+        BitArray muutuja2;          //2operand              8bitti
+        BitArray muutuja2neg;       //2netaiendkoodis       8bitti
+        BitArray muutuja3;          //const 1 / miinus 1    8bitti
+        BitArray muutuja4;          //tegevus + vastus      17bitti
 
         bool op1 = false;           //kui true, siis operand on negatiivene
         bool op2 = false;
 
+        sbyte counter;
+
         static void Main(string[] args)
         {
             Program prog = new Program();
+            byte cont = 1;
 
-            prog.setreg();
-            prog.korrutamine();
+            while(cont >= 0)
+            {
+                prog.counter = 7;
+                prog.op1 = false;
+                prog.op2 = false;
 
-            Console.Write("\n");
+                prog.setreg();
+                while (prog.counter >= 0)
+                {
+                    Console.WriteLine("\nCounter:" + prog.counter);
+                    prog.korrutamine();
+                }
+                prog.shift();
+                Console.Write("Uuesti? \n 1 = uuesti \n 0 = lopetab. \n");
+                cont = Convert.ToByte(Console.ReadLine());
+            }
         }
 
         void setreg()
@@ -56,64 +59,45 @@ namespace boothialgoritm
             sbyte i;
 
             muutuja3 = new BitArray(new byte[] { Convert.ToByte(1) });
-            bits3 = muutuja3.Cast<bool>().Select(bit3 => bit3 ? 1 : 0).ToArray();
-            Array.Reverse(bits3);
-
-            //Console.WriteLine("reg3:");
-            //for (i = 0; i < 8; i++)
-            //    Console.Write(bits3[i]);
-            //Console.WriteLine("\n");
-
             muutuja1 = new BitArray(new byte[] { Convert.ToByte(x) });
-            bits1 = muutuja1.Cast<bool>().Select(bit1 => bit1 ? 1 : 0).ToArray();
-            Array.Reverse(bits1);
 
             if (op1)
-            {
-                //Console.WriteLine("op1 t2iendkoodi:");
-                bits1 = taiendkoodi(bits1);
-            }
+                muutuja1 = taiendkoodi(muutuja1);
 
             muutuja2 = new BitArray(new byte[] { Convert.ToByte(y) });
-            bits2 = muutuja2.Cast<bool>().Select(bit2 => bit2 ? 1 : 0).ToArray();
-            Array.Reverse(bits2);
-
             muutuja4 = new BitArray(17);
-            bits4 = new int[17];
 
             if (op2)
+                muutuja2 = taiendkoodi(muutuja2);
+            muutuja2neg = taiendkoodi(muutuja2);
+
+            for (i = 7; i > -1; i--)
             {
-                Console.WriteLine("op2 t2iendkoodi:");
-                bits2neg = taiendkoodi(bits2);
-            }
-
-
-            for (i = 0; i < 8; i++)
-                Console.Write(bits1[i]);
-            Console.Write("\n");
-
-            for (i = 0; i < 8; i++)
-                Console.Write(bits2[i]);
-            Console.Write("\n");
-
-            for (i = 0; i < 8; i++)
-            {
-                if (bits1[i] == 1)
-                    muutuja4.Set(8 - i, true);
+                if (muutuja1[i] == true)
+                    Console.Write("1");
                 else
-                    muutuja4.Set(8 - i, false);
+                    Console.Write("0");
             }
-               // bits4[8 + i] = bits1[i]; 
 
-            bits3 = bitadd(bits1, bits2);
-
-            Console.Write("\n bitadd tulemus \n");
-            for (i = 0; i < 8; i++)
-                Console.Write(bits3[i]);
             Console.Write("\n");
+            for (i = 7; i > -1; i--)
+            {
+                if (muutuja2[i] == true)
+                    Console.Write("1");
+                else
+                    Console.Write("0");
+            }
+
+            for (i = 7; i > -1; i--)                 //set reg 3
+            {
+                if (muutuja1[7 - i] == true)
+                    muutuja4[8 - i] = true;
+                else
+                    muutuja4[8 - i] = false;
+            }
 
             Console.Write("\n reg3: \n");
-            for (i = 0; i < 17; i++)
+            for (i = 16; i > -1 ; i--)
             { 
                 if(muutuja4[i])
                     Console.Write("1");
@@ -123,47 +107,54 @@ namespace boothialgoritm
             Console.Write("\n");
         }
 
-        int[] bitadd(int[] op1, int[] op2)
+        BitArray bitadd(BitArray op1, BitArray op2)
         {
             bool carryin = false;
             sbyte i;
-            int[] op3 = new int[8];
+            BitArray op3 = new BitArray(8);
+            Console.Write("\n");
+            Console.WriteLine("1.liidetav");
+            for (i = 0; i < 8; i++)
+                Console.WriteLine(op1[i]);
+            Console.Write("\n");
+            Console.WriteLine("2.liidetav");
+            for (i = 0; i < 8; i++)
+                Console.WriteLine(op2[i]);
 
-            //Console.WriteLine("\n adding:");
-
-            //for (i = 0; i < 8; i++)
-            //    Console.Write(op1[i]);
-            //Console.Write("\n");
-            //for (i = 0; i < 8; i++)
-            //    Console.Write(op2[i]);
-            //Console.WriteLine("\n");
-            for (i = 7; i > -1; i--)                    //teha bitarray peale ymber
+            for (i = 0; i < 8; i++)
             {
-                if ((op1[i] == 1 && op2[i] == 1 && !carryin) || (op1[i] != op2[i] && carryin))
+                if ((op1[i] == true && op2[i] == true && !carryin) || (op1[i] != op2[i] && carryin))
                 {
-                    op3[i] = 0;
+                    op3[i] = false;
                     carryin = true;
                 }
-                else if ((op1[i] == 0 && op2[i] == 0 && !carryin))
+                else if ((op1[i] == false && op2[i] == false && !carryin))
                 {
-                    op3[i] = 0;
+                    op3[i] = false;
                     carryin = false;
                 }
-                else if (op1[i] == 1 && op2[i] == 1 && carryin)
+                else if (op1[i] == true && op2[i] == true && carryin)
                 {
-                    op3[i] = 1;
+                    op3[i] = true;
                     carryin = true;
                 }
                 else
                 {
-                    op3[i] = 1;
+                    op3[i] = true;
                     carryin = false;
                 }
+                //Console.WriteLine("op3 kohal " + i + " on " + op3[i]);
             }
-            //Console.Write("\n bitadd tulemus \n");
-            //for (i = 0; i < 8; i++)
-            //    Console.Write(op3[i]);
-            //Console.Write("\n");
+
+            Console.Write("\n bitadd tulemus \n");
+            for (i = 7; i > -1; i--)
+            {
+                if (op3[i] == true)
+                    Console.Write("1");
+                else
+                    Console.Write("0");
+            }
+            Console.Write("\n");
 
             return op3;
         }
@@ -175,55 +166,81 @@ namespace boothialgoritm
             return operand;
         }
 
-        int[] taiendkoodi(int[] x)
+        BitArray taiendkoodi(BitArray x)
         {
+            BitArray y = new BitArray(x);
             for (int i = 0; i < 8; i++)
             {
-                if (x[i] == 0)
-                    x[i] = 1;
+                if (y[i] == false)
+                    y[i] = true;
                 else
-                    x[i] = 0;
+                    y[i] = false;
             }
-            //Console.WriteLine("enne +1 taiendkoodi viimisel");
-            //for (int i = 0; i < 8; i++)
-            //    Console.Write(x[i]);
-            //Console.WriteLine("\n----------------");
-            x = bitadd(x, bits3);
 
-            //Console.WriteLine("operand t2iendkoodis:");
-            //for (int i = 0; i < 8; i++)
-            //    Console.Write(x[i]);
-            //Console.WriteLine("\n----------------");
-
-            return x;
+            y = bitadd(y, muutuja3);
+            return y;
         }
 
         void korrutamine()
         {
-            sbyte s2ilivbit = (sbyte) bits4[0];
-            if (bits4[15] == 1 && bits4[16] == 0)           //lahutamine
-                bits4 = bitadd(bits4, bits2neg);
+            int i;
+            Console.WriteLine("\n reg3");
+            for (i = muutuja4.Length-1; i > -1; i--)
+            {
+                if (muutuja4[i])
+                    Console.Write("1");
+                else
+                    Console.Write("0");
+            }
+            Console.Write("\n");
 
-            else if (bits4[15] == 0 && bits4[16] == 1)      //liitmine
-                bits4 = bitadd(bits4, bits2);
+            BitArray temp = new BitArray(8);
+            for (i = 0; i <= 7; i++ )
+                temp[i]=muutuja4[9 + i];
+
+            if (muutuja4[1] == true && muutuja4[0] == false)           //lahutamine
+            {
+                Console.WriteLine("lahutamine");
+                temp = bitadd(temp, muutuja2neg);
+            }
+
+            else if (muutuja4[1] == false && muutuja4[0] == true)      //liitmine
+            {
+                Console.WriteLine("liitmine");
+                temp = bitadd(temp, muutuja2);
+            }
+
+            for (i = 0; i <= 7; i++)
+                muutuja4[9  + i] = temp[i];
+                
             shift();
         }
         void shift()
         {
-           // muutuja4 = bits4;
-            int[] result = new int[1];
-            muutuja4.CopyTo(result, 0);
-            Console.WriteLine(result[0]);
-            Console.WriteLine(result[0]>>1);
+            Console.WriteLine("---------------------------------------------");
+            Console.Write("\n reg3 enne shifti:\n");
+            for (int i = muutuja4.Length - 1; i > -1; i--)
+            {
+                if (muutuja4[i])
+                    Console.Write("1");
+                else
+                    Console.Write("0");
+            }
+            Console.Write("\n");
+  
+            for (int i = 0; i < 15; i++)
+                muutuja4[i] = muutuja4[i+1];
+
+            Console.WriteLine("reg3 peale shifti:");
+            for (int i = muutuja4.Length - 1; i > -1; i--)
+            {
+                if (muutuja4[i])
+                    Console.Write("1");
+                else
+                    Console.Write("0");
+            }
+            Console.Write("\n");
+            counter--;
         }
-
-    }
-
-
-
-
-
-
-
-    
+    } 
 }
