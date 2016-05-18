@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*   Henry Juhanson
+ *  143080IASB
+ *  Arvutite aritmeetika ja loogika
+ *    Boothi algoritmiga korrutamine
+ *    Leitav ka internetist : y009.eu/Program.txt  */  
+using System;
 using System.Collections;
 
 namespace boothialgoritm
@@ -9,17 +14,17 @@ namespace boothialgoritm
         BitArray muutuja2;          //2operand              8bitti
         BitArray muutuja2neg;       //2netaiendkoodis       8bitti
         BitArray muutuja3;          //const 1 / miinus 1    8bitti
-        BitArray muutuja4;          //tegevus + vastus      17bitti
+        BitArray muutuja4;          //tegevus               17bitti
+        BitArray vastus;
 
-        bool op1 = false, op2 = false;           //kui true, siis operand on negatiivene
-        sbyte siskuju;               //2nd v6i 10nd kuju sisestamiseks
-
+        bool op1 = false, op2 = false, overflow = false;    
+        //op1 ja 2 on pmst ainult 10nd kuju m2rgi jaoks, 2nd kujul on rg1(7) ja rg2(7)
         sbyte counter;
 
         static void Main(string[] args)
         {
             Program prog = new Program();
-            sbyte cont = 1;
+            sbyte cont = 1;         //mitmekordseks kasutamiseks
 
             while(cont == 1)
             {
@@ -33,8 +38,9 @@ namespace boothialgoritm
                     prog.prindi(false);
                     Console.WriteLine("Counter:" + prog.counter);
                     prog.korrutamine();
+                    prog.shift();
+                    prog.counter--;
                 }
-                prog.shift();
                 prog.prindi(true);
                 Console.Write("Uuesti? \n 1 = uuesti \n -1 = lopetab \n");
                 cont = Convert.ToSByte(Console.ReadLine());
@@ -91,6 +97,7 @@ namespace boothialgoritm
             if (kuju == 1)
                 muutuja2 = new BitArray(new byte[] { Convert.ToByte(y) });
             muutuja4 = new BitArray(17);
+            vastus = new BitArray(8);
 
             if (op2 && kuju == 1)
                 muutuja2 = taiendkoodi(muutuja2);
@@ -133,7 +140,10 @@ namespace boothialgoritm
                     carryin = false;
                 }
             }
-            return op3;
+            BitArray temp = new BitArray(op1);
+            for (i = 0; i < 8; i++)
+                temp[i] = op3[i];
+            return temp;
         }
 
         int getvar()
@@ -197,9 +207,6 @@ namespace boothialgoritm
 
             for (i = 0; i <= 7; i++)
                 muutuja4[9  + i] = temp[i];
-                
-            shift();
-            counter--;
         }
         void shift()
         {
@@ -209,6 +216,7 @@ namespace boothialgoritm
 
         void prindi(bool end)
         {   //reaalsuses v6iks dynaamiliseks teha, bitarray muutujaks ja i on length
+            bool temp = false;
             int i;
             Console.Write("\nReg1:"); 
             for (i = 7; i > -1; i--)
@@ -226,8 +234,7 @@ namespace boothialgoritm
                 if (muutuja2[i] == true)
                     Console.Write("1");
                 else
-                    Console.
-                        Write("0");
+                    Console.Write("0");
             }
             Console.Write("\n");
 
@@ -262,13 +269,14 @@ namespace boothialgoritm
             Console.WriteLine("\n---------------------------------------------");
             if (end)
             {
-                if (op1 ^ op2)
-                    muutuja4 = taiendkoodi(muutuja4);
+                shift();   //viimane shift on registri lykkamiseks 6igesse j2rku.
+                for (i = 7; i > -1; i--)
+                    vastus[i] = muutuja4[i];
 
-                Console.Write("Reg4:");
-                for (i = muutuja4.Length - 1; i > -1; i--)
+                Console.Write("Vastus:");
+                for (i = vastus.Length - 1; i > -1; i--)
                 {
-                    if (muutuja4[i])
+                    if (vastus[i])
                         Console.Write("1");
                     else
                         Console.Write("0");
@@ -276,10 +284,45 @@ namespace boothialgoritm
                 Console.Write("\n");
 
                 int[] result = new int[1];
-                muutuja4.CopyTo(result, 0);
-                if (op1 ^ op2)
+
+                if (vastus[7])
+                { 
+                    vastus = taiendkoodi(vastus);
+                    temp = true;
+                }
+
+                vastus.CopyTo(result, 0);
+                if (temp)
                     result[0] = -result[0];
-                Console.WriteLine("Tulemus 10nd kujul:" + result[0] + "\n");
+                Console.WriteLine("Vastus 10nd kujul:" + result[0] + "\n");
+
+                for (i = muutuja4.Length - 1; i > 6; i--)
+                    if (muutuja4[i] != (op1 ^ op2)) overflow = true;
+
+                if (overflow)
+                {
+                    temp = false;
+                    Console.Write("Saadud vastus on yletaitunud.\nV6imalik reaalne vastus: ");
+
+                    for (i = muutuja4.Length - 1; i > -1; i--)
+                    {
+                        if (muutuja4[i])
+                            Console.Write("1");
+                        else
+                            Console.Write("0");
+                    }
+                    Console.Write("\n");
+
+                    if (muutuja4[16])
+                       temp = true;
+
+                    if (op1 ^ op2)
+                        muutuja4 = taiendkoodi(muutuja4);
+
+                    muutuja4.CopyTo(result, 0);
+                    if (temp) result[0] = -result[0];
+                    Console.WriteLine("V6imalik vastus 10nd kujul: " + result[0] + "\n");
+                }
             }
         }
     } 
