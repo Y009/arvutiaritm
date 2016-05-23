@@ -28,12 +28,12 @@ namespace boothialgoritm
 
             while(cont == 1)
             {
-                prog.counter = 7;
+                prog.counter = 8;
                 prog.op1 = false;
                 prog.op2 = false;
 
                 prog.setreg();
-                while (prog.counter >= 0)
+                while (prog.counter > 0)
                 {
                     prog.prindi(false);
                     Console.WriteLine("Counter:" + prog.counter);
